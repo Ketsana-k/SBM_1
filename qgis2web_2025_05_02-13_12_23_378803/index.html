@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/filter.css">
+<link rel="stylesheet" href="css/nouislider.min.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title>Certified Sustainable Buildings</title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/tailDT.js"></script>
+<script src="js/nouislider.min.js"></script>
+<script src="js/wNumb.js"></script>
+        <script src="data/CertifiedSustainableBuildings_1.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[49.109337342967876,-102.02540097705746],[53.88842408499059,-92.48848920276022]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var title = new L.Control({'position':'topright'});
+        title.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+        title.update = function () {
+            this._div.innerHTML = '<h2>Certified Sustainable Buildings</h2>';
+        };
+        title.addTo(map);
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleMaps_0');
+        map.getPane('pane_GoogleMaps_0').style.zIndex = 400;
+        var layer_GoogleMaps_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleMaps_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+        });
+        layer_GoogleMaps_0;
+        map.addLayer(layer_GoogleMaps_0);
+        function pop_CertifiedSustainableBuildings_1(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Photo'] !== null ? '<img src="images/' + String(feature.properties['Photo']).replace(/[\\/:]/g, '_').trim().replace(/'/g, '\'').replace(/"/g, '&quot;') + '">' : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Building Type</th>\
+                        <td class="visible-with-data" id="Building Type">' + (feature.properties['Building Type'] !== null ? autolinker.link(String(feature.properties['Building Type']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Name</th>\
+                        <td class="visible-with-data" id="Name">' + (feature.properties['Name'] !== null ? autolinker.link(String(feature.properties['Name']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Organisation</th>\
+                        <td class="visible-with-data" id="Organisation">' + (feature.properties['Organisation'] !== null ? autolinker.link(String(feature.properties['Organisation']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Size</th>\
+                        <td class="visible-with-data" id="Size">' + (feature.properties['Size'] !== null ? autolinker.link(String(feature.properties['Size']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Registered Year</th>\
+                        <td class="visible-with-data" id="Registered Year">' + (feature.properties['Registered Year'] !== null ? autolinker.link(String(feature.properties['Registered Year']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Certified Year</th>\
+                        <td class="visible-with-data" id="Certified Year">' + (feature.properties['Certified Year'] !== null ? autolinker.link(String(feature.properties['Certified Year']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Rating System</th>\
+                        <td class="visible-with-data" id="Rating System">' + (feature.properties['Rating System'] !== null ? autolinker.link(String(feature.properties['Rating System']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">LEED Certification</th>\
+                        <td class="visible-with-data" id="LEED Certification">' + (feature.properties['LEED Certification'] !== null ? autolinker.link(String(feature.properties['LEED Certification']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Notes</th>\
+                        <td class="visible-with-data" id="Notes">' + (feature.properties['Notes'] !== null ? autolinker.link(String(feature.properties['Notes']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Heating System</th>\
+                        <td class="visible-with-data" id="Heating System">' + (feature.properties['Heating System'] !== null ? autolinker.link(String(feature.properties['Heating System']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Cooling System</th>\
+                        <td class="visible-with-data" id="Cooling System">' + (feature.properties['Cooling System'] !== null ? autolinker.link(String(feature.properties['Cooling System']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Energy Efficiency</th>\
+                        <td class="visible-with-data" id="Energy Efficiency">' + (feature.properties['Energy Efficiency'] !== null ? autolinker.link(String(feature.properties['Energy Efficiency']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Water Conservation Features</th>\
+                        <td class="visible-with-data" id="Water Conservation Features">' + (feature.properties['Water Conservation Features'] !== null ? autolinker.link(String(feature.properties['Water Conservation Features']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Sustainable Materials</th>\
+                        <td class="visible-with-data" id="Sustainable Materials">' + (feature.properties['Sustainable Materials'] !== null ? autolinker.link(String(feature.properties['Sustainable Materials']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Renewable Energy Integration</th>\
+                        <td class="visible-with-data" id="Renewable Energy Integration">' + (feature.properties['Renewable Energy Integration'] !== null ? autolinker.link(String(feature.properties['Renewable Energy Integration']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Innovative Design</th>\
+                        <td class="visible-with-data" id="Innovative Design">' + (feature.properties['Innovative Design'] !== null ? autolinker.link(String(feature.properties['Innovative Design']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Link</th>\
+                        <td class="visible-with-data" id="Link">' + (feature.properties['Link'] !== null ? autolinker.link(String(feature.properties['Link']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_CertifiedSustainableBuildings_1_0(feature) {
+            switch(String(feature.properties['SBM Member'])) {
+                case '0':
+                    return {
+                pane: 'pane_CertifiedSustainableBuildings_1',
+                radius: 6.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(12,154,236,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1':
+                    return {
+                pane: 'pane_CertifiedSustainableBuildings_1',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(23,251,58,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_CertifiedSustainableBuildings_1');
+        map.getPane('pane_CertifiedSustainableBuildings_1').style.zIndex = 401;
+        map.getPane('pane_CertifiedSustainableBuildings_1').style['mix-blend-mode'] = 'normal';
+        var layer_CertifiedSustainableBuildings_1 = new L.geoJson(json_CertifiedSustainableBuildings_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_CertifiedSustainableBuildings_1',
+            layerName: 'layer_CertifiedSustainableBuildings_1',
+            pane: 'pane_CertifiedSustainableBuildings_1',
+            onEachFeature: pop_CertifiedSustainableBuildings_1,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_CertifiedSustainableBuildings_1_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_CertifiedSustainableBuildings_1);
+        map.addLayer(layer_CertifiedSustainableBuildings_1);
+        var overlaysTree = [
+            {label: 'Certified Sustainable Buildings<br /><table><tr><td style="text-align: center;"><img src="legend/CertifiedSustainableBuildings_1_CertifiedBuildings0.png" /></td><td>Certified Buildings</td></tr><tr><td style="text-align: center;"><img src="legend/CertifiedSustainableBuildings_1_SBMMembersBuildings1.png" /></td><td>SBM Members\' Buildings</td></tr></table>', layer: layer_CertifiedSustainableBuildings_1},
+            {label: "Google Maps", layer: layer_GoogleMaps_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        var mapDiv = document.getElementById('map');
+        var row = document.createElement('div');
+        row.className="row";
+        row.id="all";
+        row.style.height = "100%";
+        var col1 = document.createElement('div');
+        col1.className="col9";
+        col1.id = "mapWindow";
+        col1.style.height = "99%";
+        col1.style.width = "80%";
+        col1.style.display = "inline-block";
+        var col2 = document.createElement('div');
+        col2.className="col3";
+        col2.id = "menu";
+        col2.style.display = "inline-block";
+        mapDiv.parentNode.insertBefore(row, mapDiv);
+        document.getElementById("all").appendChild(col1);
+        document.getElementById("all").appendChild(col2);
+        col1.appendChild(mapDiv)
+        var Filters = {"Certification": "str","Heating System": "str","Cooling System": "str","Energy Efficiency": "str","Water Conservation Features": "str","Sustainable Materials": "str","Renewable Energy Integration": "str","Innovative Design": "str"};
+        function filterFunc() {
+          map.eachLayer(function(lyr){
+          if ("options" in lyr && "dataVar" in lyr["options"]){
+            features = this[lyr["options"]["dataVar"]].features.slice(0);
+            try{
+              for (key in Filters){
+                keyS = key.replace(/[^a-zA-Z0-9_]/g, "")
+                if (Filters[key] == "str" || Filters[key] == "bool"){
+                  var selection = [];
+                  var options = document.getElementById("sel_" + keyS).options
+                  for (var i=0; i < options.length; i++) {
+                    if (options[i].selected) selection.push(options[i].value);
+                  }
+                    try{
+                      if (key in features[0].properties){
+                        for (i = features.length - 1;
+                          i >= 0; --i){
+                          if (selection.indexOf(
+                          features[i].properties[key])<0
+                          && selection.length>0) {
+                          features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                  }
+                }
+                if (Filters[key] == "int"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (parseInt(features[i].properties[key])
+                          < sliderVals[0]
+                          || parseInt(features[i].properties[key])
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "real"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (features[i].properties[key]
+                          < sliderVals[0]
+                          || features[i].properties[key]
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "date"
+                  || Filters[key] == "datetime"
+                  || Filters[key] == "time"){
+                  try{
+                    if (key in features[0].properties){
+                      HTMLkey = key.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, '');
+                      startdate = document.getElementById("dat_" +
+                        HTMLkey + "_date1").value.replace(" ", "T");
+                      enddate = document.getElementById("dat_" +
+                        HTMLkey + "_date2").value.replace(" ", "T");
+                      for (i = features.length - 1; i >= 0; --i){
+                        if (features[i].properties[key] < startdate
+                          || features[i].properties[key] > enddate){
+                          features.splice(i,1);
+                        }
+                      }
+                    }
+                  } catch(err){
+                  }
+                }
+              }
+            } catch(err){
+            }
+          this[lyr["options"]["layerName"]].clearLayers();
+          this[lyr["options"]["layerName"]].addData(features);
+          }
+          })
+        }
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Certification = document.createElement('div');
+            div_Certification.id = "div_Certification";
+            div_Certification.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Certification);
+            sel_Certification = document.createElement('select');
+            sel_Certification.multiple = true;
+            sel_Certification.size = 9;
+            sel_Certification.id = "sel_Certification";
+            var Certification_options_str = "<option value='' unselected></option>";
+            sel_Certification.onchange = function(){filterFunc()};
+            Certification_options_str  += '<option value="Energy Star Canada">Energy Star Canada</option>';
+            Certification_options_str  += '<option value="LEED Certification">LEED Certification</option>';
+            Certification_options_str  += '<option value="LEED Certification and Energy Star Canada">LEED Certification and Energy Star Canada</option>';
+            Certification_options_str  += '<option value="LEED Certification and Well Building Certification">LEED Certification and Well Building Certification</option>';
+            Certification_options_str  += '<option value="LEED Certification, Well Building Certification, and Energy Star Canada">LEED Certification, Well Building Certification, and Energy Star Canada</option>';
+            Certification_options_str  += '<option value="N/A">N/A</option>';
+            Certification_options_str  += '<option value="Passive House">Passive House</option>';
+            Certification_options_str  += '<option value="Well Building Certification">Well Building Certification</option>';
+            Certification_options_str  += '<option value="ZCB - Design">ZCB - Design</option>';
+            sel_Certification.innerHTML = Certification_options_str;
+            div_Certification.appendChild(sel_Certification);
+            var lab_Certification = document.createElement('div');
+            lab_Certification.innerHTML = 'Certification';
+            lab_Certification.className = 'filterlabel';
+            div_Certification.appendChild(lab_Certification);
+            var reset_Certification = document.createElement('div');
+            reset_Certification.innerHTML = 'clear filter';
+            reset_Certification.className = 'filterlabel';
+            reset_Certification.onclick = function() {
+                var options = document.getElementById("sel_Certification").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Certification.appendChild(reset_Certification);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_HeatingSystem = document.createElement('div');
+            div_HeatingSystem.id = "div_HeatingSystem";
+            div_HeatingSystem.className= "filterselect";
+            document.getElementById("menu").appendChild(div_HeatingSystem);
+            sel_HeatingSystem = document.createElement('select');
+            sel_HeatingSystem.multiple = true;
+            sel_HeatingSystem.size = 2;
+            sel_HeatingSystem.id = "sel_HeatingSystem";
+            var HeatingSystem_options_str = "<option value='' unselected></option>";
+            sel_HeatingSystem.onchange = function(){filterFunc()};
+            HeatingSystem_options_str  += '<option value="NULL">NULL</option>';
+            HeatingSystem_options_str  += '<option value="Air-source heat pump">Air-source heat pump</option>';
+            sel_HeatingSystem.innerHTML = HeatingSystem_options_str;
+            div_HeatingSystem.appendChild(sel_HeatingSystem);
+            var lab_HeatingSystem = document.createElement('div');
+            lab_HeatingSystem.innerHTML = 'Heating System';
+            lab_HeatingSystem.className = 'filterlabel';
+            div_HeatingSystem.appendChild(lab_HeatingSystem);
+            var reset_HeatingSystem = document.createElement('div');
+            reset_HeatingSystem.innerHTML = 'clear filter';
+            reset_HeatingSystem.className = 'filterlabel';
+            reset_HeatingSystem.onclick = function() {
+                var options = document.getElementById("sel_HeatingSystem").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_HeatingSystem.appendChild(reset_HeatingSystem);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_CoolingSystem = document.createElement('div');
+            div_CoolingSystem.id = "div_CoolingSystem";
+            div_CoolingSystem.className= "filterselect";
+            document.getElementById("menu").appendChild(div_CoolingSystem);
+            sel_CoolingSystem = document.createElement('select');
+            sel_CoolingSystem.multiple = true;
+            sel_CoolingSystem.size = 2;
+            sel_CoolingSystem.id = "sel_CoolingSystem";
+            var CoolingSystem_options_str = "<option value='' unselected></option>";
+            sel_CoolingSystem.onchange = function(){filterFunc()};
+            CoolingSystem_options_str  += '<option value="NULL">NULL</option>';
+            CoolingSystem_options_str  += '<option value="Air-source heat pump">Air-source heat pump</option>';
+            sel_CoolingSystem.innerHTML = CoolingSystem_options_str;
+            div_CoolingSystem.appendChild(sel_CoolingSystem);
+            var lab_CoolingSystem = document.createElement('div');
+            lab_CoolingSystem.innerHTML = 'Cooling System';
+            lab_CoolingSystem.className = 'filterlabel';
+            div_CoolingSystem.appendChild(lab_CoolingSystem);
+            var reset_CoolingSystem = document.createElement('div');
+            reset_CoolingSystem.innerHTML = 'clear filter';
+            reset_CoolingSystem.className = 'filterlabel';
+            reset_CoolingSystem.onclick = function() {
+                var options = document.getElementById("sel_CoolingSystem").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_CoolingSystem.appendChild(reset_CoolingSystem);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_EnergyEfficiency = document.createElement('div');
+            div_EnergyEfficiency.id = "div_EnergyEfficiency";
+            div_EnergyEfficiency.className= "filterselect";
+            document.getElementById("menu").appendChild(div_EnergyEfficiency);
+            sel_EnergyEfficiency = document.createElement('select');
+            sel_EnergyEfficiency.multiple = true;
+            sel_EnergyEfficiency.size = 3;
+            sel_EnergyEfficiency.id = "sel_EnergyEfficiency";
+            var EnergyEfficiency_options_str = "<option value='' unselected></option>";
+            sel_EnergyEfficiency.onchange = function(){filterFunc()};
+            EnergyEfficiency_options_str  += '<option value="NULL">NULL</option>';
+            EnergyEfficiency_options_str  += '<option value="HAVC systems and ERV Systems">HAVC systems and ERV Systems</option>';
+            EnergyEfficiency_options_str  += '<option value="HAVC systems, ERV Systems, LED lighting with smart controls">HAVC systems, ERV Systems, LED lighting with smart controls</option>';
+            sel_EnergyEfficiency.innerHTML = EnergyEfficiency_options_str;
+            div_EnergyEfficiency.appendChild(sel_EnergyEfficiency);
+            var lab_EnergyEfficiency = document.createElement('div');
+            lab_EnergyEfficiency.innerHTML = 'Energy Efficiency';
+            lab_EnergyEfficiency.className = 'filterlabel';
+            div_EnergyEfficiency.appendChild(lab_EnergyEfficiency);
+            var reset_EnergyEfficiency = document.createElement('div');
+            reset_EnergyEfficiency.innerHTML = 'clear filter';
+            reset_EnergyEfficiency.className = 'filterlabel';
+            reset_EnergyEfficiency.onclick = function() {
+                var options = document.getElementById("sel_EnergyEfficiency").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_EnergyEfficiency.appendChild(reset_EnergyEfficiency);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_WaterConservationFeatures = document.createElement('div');
+            div_WaterConservationFeatures.id = "div_WaterConservationFeatures";
+            div_WaterConservationFeatures.className= "filterselect";
+            document.getElementById("menu").appendChild(div_WaterConservationFeatures);
+            sel_WaterConservationFeatures = document.createElement('select');
+            sel_WaterConservationFeatures.multiple = true;
+            sel_WaterConservationFeatures.size = 1;
+            sel_WaterConservationFeatures.id = "sel_WaterConservationFeatures";
+            var WaterConservationFeatures_options_str = "<option value='' unselected></option>";
+            sel_WaterConservationFeatures.onchange = function(){filterFunc()};
+            WaterConservationFeatures_options_str  += '<option value="NULL">NULL</option>';
+            sel_WaterConservationFeatures.innerHTML = WaterConservationFeatures_options_str;
+            div_WaterConservationFeatures.appendChild(sel_WaterConservationFeatures);
+            var lab_WaterConservationFeatures = document.createElement('div');
+            lab_WaterConservationFeatures.innerHTML = 'Water Conservation Features';
+            lab_WaterConservationFeatures.className = 'filterlabel';
+            div_WaterConservationFeatures.appendChild(lab_WaterConservationFeatures);
+            var reset_WaterConservationFeatures = document.createElement('div');
+            reset_WaterConservationFeatures.innerHTML = 'clear filter';
+            reset_WaterConservationFeatures.className = 'filterlabel';
+            reset_WaterConservationFeatures.onclick = function() {
+                var options = document.getElementById("sel_WaterConservationFeatures").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_WaterConservationFeatures.appendChild(reset_WaterConservationFeatures);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_SustainableMaterials = document.createElement('div');
+            div_SustainableMaterials.id = "div_SustainableMaterials";
+            div_SustainableMaterials.className= "filterselect";
+            document.getElementById("menu").appendChild(div_SustainableMaterials);
+            sel_SustainableMaterials = document.createElement('select');
+            sel_SustainableMaterials.multiple = true;
+            sel_SustainableMaterials.size = 3;
+            sel_SustainableMaterials.id = "sel_SustainableMaterials";
+            var SustainableMaterials_options_str = "<option value='' unselected></option>";
+            sel_SustainableMaterials.onchange = function(){filterFunc()};
+            SustainableMaterials_options_str  += '<option value="NULL">NULL</option>';
+            SustainableMaterials_options_str  += '<option value="Modular or prefabricated components,">Modular or prefabricated components,</option>';
+            SustainableMaterials_options_str  += '<option value="Recycled or reclaimed materials">Recycled or reclaimed materials</option>';
+            sel_SustainableMaterials.innerHTML = SustainableMaterials_options_str;
+            div_SustainableMaterials.appendChild(sel_SustainableMaterials);
+            var lab_SustainableMaterials = document.createElement('div');
+            lab_SustainableMaterials.innerHTML = 'Sustainable Materials';
+            lab_SustainableMaterials.className = 'filterlabel';
+            div_SustainableMaterials.appendChild(lab_SustainableMaterials);
+            var reset_SustainableMaterials = document.createElement('div');
+            reset_SustainableMaterials.innerHTML = 'clear filter';
+            reset_SustainableMaterials.className = 'filterlabel';
+            reset_SustainableMaterials.onclick = function() {
+                var options = document.getElementById("sel_SustainableMaterials").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_SustainableMaterials.appendChild(reset_SustainableMaterials);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_RenewableEnergyIntegration = document.createElement('div');
+            div_RenewableEnergyIntegration.id = "div_RenewableEnergyIntegration";
+            div_RenewableEnergyIntegration.className= "filterselect";
+            document.getElementById("menu").appendChild(div_RenewableEnergyIntegration);
+            sel_RenewableEnergyIntegration = document.createElement('select');
+            sel_RenewableEnergyIntegration.multiple = true;
+            sel_RenewableEnergyIntegration.size = 1;
+            sel_RenewableEnergyIntegration.id = "sel_RenewableEnergyIntegration";
+            var RenewableEnergyIntegration_options_str = "<option value='' unselected></option>";
+            sel_RenewableEnergyIntegration.onchange = function(){filterFunc()};
+            RenewableEnergyIntegration_options_str  += '<option value="NULL">NULL</option>';
+            sel_RenewableEnergyIntegration.innerHTML = RenewableEnergyIntegration_options_str;
+            div_RenewableEnergyIntegration.appendChild(sel_RenewableEnergyIntegration);
+            var lab_RenewableEnergyIntegration = document.createElement('div');
+            lab_RenewableEnergyIntegration.innerHTML = 'Renewable Energy Integration';
+            lab_RenewableEnergyIntegration.className = 'filterlabel';
+            div_RenewableEnergyIntegration.appendChild(lab_RenewableEnergyIntegration);
+            var reset_RenewableEnergyIntegration = document.createElement('div');
+            reset_RenewableEnergyIntegration.innerHTML = 'clear filter';
+            reset_RenewableEnergyIntegration.className = 'filterlabel';
+            reset_RenewableEnergyIntegration.onclick = function() {
+                var options = document.getElementById("sel_RenewableEnergyIntegration").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_RenewableEnergyIntegration.appendChild(reset_RenewableEnergyIntegration);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_InnovativeDesign = document.createElement('div');
+            div_InnovativeDesign.id = "div_InnovativeDesign";
+            div_InnovativeDesign.className= "filterselect";
+            document.getElementById("menu").appendChild(div_InnovativeDesign);
+            sel_InnovativeDesign = document.createElement('select');
+            sel_InnovativeDesign.multiple = true;
+            sel_InnovativeDesign.size = 2;
+            sel_InnovativeDesign.id = "sel_InnovativeDesign";
+            var InnovativeDesign_options_str = "<option value='' unselected></option>";
+            sel_InnovativeDesign.onchange = function(){filterFunc()};
+            InnovativeDesign_options_str  += '<option value="NULL">NULL</option>';
+            InnovativeDesign_options_str  += '<option value="Passive house design">Passive house design</option>';
+            sel_InnovativeDesign.innerHTML = InnovativeDesign_options_str;
+            div_InnovativeDesign.appendChild(sel_InnovativeDesign);
+            var lab_InnovativeDesign = document.createElement('div');
+            lab_InnovativeDesign.innerHTML = 'Innovative Design';
+            lab_InnovativeDesign.className = 'filterlabel';
+            div_InnovativeDesign.appendChild(lab_InnovativeDesign);
+            var reset_InnovativeDesign = document.createElement('div');
+            reset_InnovativeDesign.innerHTML = 'clear filter';
+            reset_InnovativeDesign.className = 'filterlabel';
+            reset_InnovativeDesign.onclick = function() {
+                var options = document.getElementById("sel_InnovativeDesign").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_InnovativeDesign.appendChild(reset_InnovativeDesign);
+        </script>
+    </body>
+</html>
